@@ -2,9 +2,10 @@
 
 Cleans up ugly profiler trace with wrong method paths to correct ones.
 
+- Install @hermes/hm globally: `npm i -g @hermes/hm`
 - Record profiler trace with Chrome DevTools with Flipper
 - Save the .cpuprofile
-- Run `node index.mjs {.cpuprofile_path}`
+- Run `hmapper {.cpuprofile_path}`
 - Fixed file will appear on Desktop
 
 ### Additional commands:

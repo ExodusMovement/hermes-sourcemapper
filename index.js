@@ -1,11 +1,8 @@
-import fetch from "node-fetch";
-import path from "path";
-import { SourceMapConsumer } from "source-map";
-import fs from "fs";
-import os from "os";
-import minimist from "minimist";
-
-const argv = minimist(process.argv.slice(2));
+const fetch = require("node-fetch");
+const path = require("path");
+const { SourceMapConsumer } = require("source-map");
+const fs = require("fs");
+const os = require("os");
 
 const desktopDir = path.join(os.homedir(), "Desktop");
 
@@ -50,7 +47,7 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile) => {
   consumer.destroy();
 };
 
-const init = async () => {
+const init = async (argv) => {
   const tracePath = argv["_"][0];
   const fileName = path.basename(tracePath);
   const dstDir = argv["dst"] || desktopDir;
@@ -77,4 +74,6 @@ const init = async () => {
   }
 };
 
-init();
+module.exports = {
+  init,
+};
