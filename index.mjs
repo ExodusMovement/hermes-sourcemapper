@@ -9,7 +9,7 @@ const argv = minimist(process.argv.slice(2));
 
 const desktopDir = path.join(os.homedir(), "Desktop");
 
-const applySourceMapsToEvents = async (sourceMap, trace, dstFile) => {
+const applySourceMapsToNode = async (sourceMap, trace, dstFile) => {
   const rawSourceMap = {
     version: Number(sourceMap.version),
     sources: sourceMap.sources,
@@ -51,7 +51,7 @@ const applySourceMapsToEvents = async (sourceMap, trace, dstFile) => {
   consumer.destroy();
 };
 
-const loadMap = async () => {
+const init = async () => {
   const tracePath = argv["_"][0];
   const fileName = path.basename(tracePath);
   const dstDir = argv["dst"] || desktopDir;
@@ -78,4 +78,4 @@ const loadMap = async () => {
   }
 };
 
-loadMap();
+init();
