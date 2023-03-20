@@ -1,4 +1,7 @@
 {
+  "name": "@exodus/hm",
+  "version": "0.0.1",
+  "main": "index.mjs",
   "dependencies": {
     "minimist": "^1.2.8",
     "node-fetch": "^3.3.1",

@@ -9,7 +9,7 @@ const argv = minimist(process.argv.slice(2));
 
 const desktopDir = path.join(os.homedir(), "Desktop");
 
-const applySourceMapsToNode = async (sourceMap, trace, dstFile) => {
+const applySourceMapsToNodes = async (sourceMap, trace, dstFile) => {
   const rawSourceMap = {
     version: Number(sourceMap.version),
     sources: sourceMap.sources,
@@ -45,9 +45,8 @@ const applySourceMapsToNode = async (sourceMap, trace, dstFile) => {
     if (err) {
       console.error(err);
     }
-    // file written successfully
-    console.log("Map cleaned");
   });
+  console.log("Map cleaned", dstFile);
   consumer.destroy();
 };
 
@@ -72,7 +71,7 @@ const init = async () => {
 
     const sourceMap = await (await fetch(mapUrl)).json();
 
-    applySourceMapsToEvents(sourceMap, traceData, dstFile);
+    applySourceMapsToNodes(sourceMap, traceData, dstFile);
   } catch (err) {
     console.error(err);
   }
