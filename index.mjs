@@ -27,13 +27,16 @@ const applySourceMapsToEvents = async (sourceMap, trace, dstFile) => {
 
       const name = ev.callFrame.functionName;
 
+      sm.source = sm.source?.replace(os.homedir(), "~");
+
       ev.callFrame = {
         ...ev.callFrame,
         url: sm.source,
         lineNumber: sm.line,
         columnNumber: sm.column,
         functionName:
-          name.substring(0, name.indexOf("(")) + "(" + sm.source + ")",
+          name.substring(0, name.indexOf("(")) +
+          `(${sm.source}:${sm.line}:${sm.column})`,
       };
     }
   });
