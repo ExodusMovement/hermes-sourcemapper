@@ -10,7 +10,7 @@ Cleans up ugly profiler trace with wrong method paths to correct ones.
 
 ### Additional commands:
 
-- `dev` - Fetch dev sourcemap
+- `dev` - true | false
 
 - `platform` - ios | android
 
