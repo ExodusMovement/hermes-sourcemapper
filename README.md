@@ -2,7 +2,7 @@
 
 Cleans up ugly profiler trace with wrong method paths to correct ones.
 
-- Install @hermes/hm globally: `npm i -g @hermes/hm`
+- Install @exodus/hm globally: `npm i -g @exodus/hm`
 - Record profiler trace with Chrome DevTools with Flipper
 - Save the .cpuprofile
 - Run `hmapper {.cpuprofile_path}`
