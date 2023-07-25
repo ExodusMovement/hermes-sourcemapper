@@ -15,6 +15,15 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile) => {
   };
 
   const consumer = await new SourceMapConsumer(rawSourceMap);
+  if (!trace.nodes) {
+    const traceEvents= trace.traceEvents
+    if (!traceEvents) {
+      throw new Error('something wrong with profile, adjust script to find nodes')
+    }
+    const profile = traceEvents[traceEvents.length - 1].args.data.cpuProfile
+
+    trace = profile
+  }
   trace.nodes.forEach((ev) => {
     if (ev.callFrame && ev.callFrame.lineNumber) {
       const sm = consumer.originalPositionFor({
