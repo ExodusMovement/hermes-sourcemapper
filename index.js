@@ -6,13 +6,14 @@ const os = require("os");
 
 const desktopDir = path.join(os.homedir(), "Desktop");
 
-const cleanupFunc = require('./cleanup-func')
+const cleanupFunc = require("./cleanup-func");
 
 const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
-  const { sterilize } = opts
+  const { sterilize } = opts;
   if (sterilize) {
-    console.log('sterilize option enabled')
+    console.log("sterilize option enabled");
   }
+
   const rawSourceMap = {
     version: Number(sourceMap.version),
     sources: sourceMap.sources,
@@ -22,14 +23,18 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
 
   const consumer = await new SourceMapConsumer(rawSourceMap);
   if (!trace.nodes) {
-    const traceEvents= trace.traceEvents
+    const traceEvents = trace.traceEvents;
     if (!traceEvents) {
-      throw new Error('something wrong with profile, adjust script to find nodes')
+      throw new Error(
+        "something wrong with profile, adjust script to find nodes",
+      );
     }
-    const profile = traceEvents[traceEvents.length - 1].args.data.cpuProfile
 
-    trace = profile
+    const profile = traceEvents[traceEvents.length - 1].args.data.cpuProfile;
+
+    trace = profile;
   }
+
   trace.nodes.forEach((ev) => {
     if (ev.callFrame && ev.callFrame.lineNumber) {
       const sm = consumer.originalPositionFor({
@@ -40,14 +45,16 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
       const name = ev.callFrame.functionName;
 
       sm.source = sm.source?.replace(os.homedir(), "~");
-      
-      let functionName = name.substring(0, name.indexOf("(")) +
-        `(${sm.source}:${sm.line}:${sm.column})`
-      
-      if (sterilize){
-        functionName = cleanupFunc(functionName)
+
+      let functionName =
+        name.slice(0, Math.max(0, name.indexOf("("))) +
+        `(${sm.source}:${sm.line}:${sm.column})`;
+
+      if (sterilize) {
+        functionName = cleanupFunc(functionName);
       }
 
+      // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
       ev.callFrame = {
         ...ev.callFrame,
         url: sm.source,
@@ -55,10 +62,9 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
         columnNumber: sm.column,
         functionName,
       };
-    } else if (ev.callFrame) {
-      if (sterilize){
-        ev.callFrame.functionName = cleanupFunc(ev.callFrame.functionName)
-      }
+    } else if (ev.callFrame && sterilize) {
+      // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
+      ev.callFrame.functionName = cleanupFunc(ev.callFrame.functionName);
     }
   });
 
@@ -76,7 +82,7 @@ const init = async (argv) => {
   const fileName = path.basename(tracePath);
   const dstDir = argv["dst"] || desktopDir;
   const dstFile = dstDir + "/FIXED_" + fileName;
-  const sterilize = argv["sterilize"]
+  const sterilize = argv["sterilize"];
 
   try {
     const traceData = JSON.parse(fs.readFileSync(tracePath, "utf8"));
@@ -91,9 +97,10 @@ const init = async (argv) => {
 
     console.log("Downloading map from:", mapUrl);
 
+    // eslint-disable-next-line unicorn/no-await-expression-member
     const sourceMap = await (await fetch(mapUrl)).json();
 
-    applySourceMapsToNodes(sourceMap, traceData, dstFile, {sterilize});
+    applySourceMapsToNodes(sourceMap, traceData, dstFile, { sterilize });
   } catch (err) {
     console.error(err);
   }
