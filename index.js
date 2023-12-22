@@ -6,7 +6,13 @@ const os = require("os");
 
 const desktopDir = path.join(os.homedir(), "Desktop");
 
-const applySourceMapsToNodes = async (sourceMap, trace, dstFile) => {
+const cleanupFunc = require('./cleanup-func')
+
+const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
+  const { sterilize } = opts
+  if (sterilize) {
+    console.log('sterilize option enabled')
+  }
   const rawSourceMap = {
     version: Number(sourceMap.version),
     sources: sourceMap.sources,
@@ -34,16 +40,25 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile) => {
       const name = ev.callFrame.functionName;
 
       sm.source = sm.source?.replace(os.homedir(), "~");
+      
+      let functionName = name.substring(0, name.indexOf("(")) +
+        `(${sm.source}:${sm.line}:${sm.column})`
+      
+      if (sterilize){
+        functionName = cleanupFunc(functionName)
+      }
 
       ev.callFrame = {
         ...ev.callFrame,
         url: sm.source,
         lineNumber: sm.line,
         columnNumber: sm.column,
-        functionName:
-          name.substring(0, name.indexOf("(")) +
-          `(${sm.source}:${sm.line}:${sm.column})`,
+        functionName,
       };
+    } else if (ev.callFrame) {
+      if (sterilize){
+        ev.callFrame.functionName = cleanupFunc(ev.callFrame.functionName)
+      }
     }
   });
 
@@ -61,6 +76,7 @@ const init = async (argv) => {
   const fileName = path.basename(tracePath);
   const dstDir = argv["dst"] || desktopDir;
   const dstFile = dstDir + "/FIXED_" + fileName;
+  const sterilize = argv["sterilize"]
 
   try {
     const traceData = JSON.parse(fs.readFileSync(tracePath, "utf8"));
@@ -77,7 +93,7 @@ const init = async (argv) => {
 
     const sourceMap = await (await fetch(mapUrl)).json();
 
-    applySourceMapsToNodes(sourceMap, traceData, dstFile);
+    applySourceMapsToNodes(sourceMap, traceData, dstFile, {sterilize});
   } catch (err) {
     console.error(err);
   }
