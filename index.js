@@ -107,6 +107,7 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
     }
   });
 
+  // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
   trace.nodes = resultNodes;
 
   fs.writeFileSync(dstFile, JSON.stringify(trace), (err) => {
