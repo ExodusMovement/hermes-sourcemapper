@@ -6,7 +6,7 @@ const os = require("os");
 
 const desktopDir = path.join(os.homedir(), "Desktop");
 
-const cleanupFunc = require("./cleanup-func");
+const filterFunc = require("./filter-func");
 
 const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
   const { sterilize } = opts;
@@ -35,6 +35,11 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
     trace = profile;
   }
 
+  const traceNodesById = new Map();
+  trace.nodes.forEach((ev) => traceNodesById.set(ev.id, ev));
+
+  const resultNodes = [];
+
   trace.nodes.forEach((ev) => {
     if (ev.callFrame && ev.callFrame.lineNumber) {
       const sm = consumer.originalPositionFor({
@@ -46,13 +51,9 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
 
       sm.source = sm.source?.replace(os.homedir(), "~");
 
-      let functionName =
+      const functionName =
         name.slice(0, Math.max(0, name.indexOf("("))) +
         `(${sm.source}:${sm.line}:${sm.column})`;
-
-      if (sterilize) {
-        functionName = cleanupFunc(functionName);
-      }
 
       // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
       ev.callFrame = {
@@ -62,11 +63,51 @@ const applySourceMapsToNodes = async (sourceMap, trace, dstFile, opts = {}) => {
         columnNumber: sm.column,
         functionName,
       };
-    } else if (ev.callFrame && sterilize) {
-      // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
-      ev.callFrame.functionName = cleanupFunc(ev.callFrame.functionName);
+    }
+
+    if (sterilize && !filterFunc(ev.callFrame.functionName)) {
+      const nodeChildren = ev.children;
+
+      if (nodeChildren.length > 0) {
+        const firstChildId = nodeChildren[0];
+        const parent = trace.nodes.find((node) =>
+          node.children.includes(ev.id),
+        );
+
+        // add children instead of this node to parent children
+        if (parent) {
+          parent.children = [
+            ...parent.children.filter((id) => id !== ev.id),
+            ...nodeChildren,
+          ];
+        }
+
+        // replace sample id with first child id. function duration will be measured using it.
+        // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
+        trace.samples = trace.samples.map((id) => {
+          if (id === ev.id) {
+            return firstChildId;
+          }
+
+          return id;
+        });
+      } else {
+        // replace sample id with root id to display nothing
+        // eslint-disable-next-line @exodus/mutable/no-param-reassign-prop-only
+        trace.samples = trace.samples.map((id) => {
+          if (id === ev.id) {
+            return 1;
+          }
+
+          return id;
+        });
+      }
+    } else {
+      resultNodes.push(ev);
     }
   });
+
+  trace.nodes = resultNodes;
 
   fs.writeFileSync(dstFile, JSON.stringify(trace), (err) => {
     if (err) {

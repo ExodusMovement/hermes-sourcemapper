@@ -19,9 +19,7 @@ const BLACKLIST = [
   "react-native/Libraries/Blob",
 ];
 
-const cleanupFunc = (funcName) =>
-  BLACKLIST.some((testString) => funcName.includes(testString))
-    ? "-"
-    : funcName;
+const filterFunc = (funcName) =>
+  !BLACKLIST.some((testString) => funcName.includes(testString));
 
-module.exports = cleanupFunc;
+module.exports = filterFunc;
