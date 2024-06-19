@@ -21,3 +21,5 @@ Cleans up ugly profiler trace with wrong method paths to correct ones.
 - `runModule` - true | false
 
 - `app` - app BundleID/PackageName
+
+- `sterilize` - true|false. experimental. removes some react internals from stack trace which don't help to explore performance issues.
